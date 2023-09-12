@@ -7,7 +7,7 @@ import pickle
 from selenium.webdriver.common.by import By
 import datetime
 
-login_url = 'http://ids.xidian.edu.cn/authserver/login?service=https%3A%2F%2Fauth.scientia.com.cn%2Fv2%2Fsignin-cas%3Fstate%3DCfDJ8CaQIIr2J39Ijme2Hz0wYvbE0GccOeJI7wJUd-VmDp1JNJDdLZ0fBwc3Z4zhAwsgzx6jIoZU7HVyOknxzrVpyfqFvFW3QzrFppWaidfFroFcvxWm9KATsMNjnEeZFGvEEMACjT2EIZ8KKqy0ur2obMI97toaPGG8VJfnRmGu5uxyXQeSSGrXleDXwdKCiH8uOpq4KeFdUyKdEsMEqTNFC5JRhhZBdLf0mpyuVu6viJHf096Updhq5LZ_vu2-dmVZO2puWy-IacP6LPYK3K3VUKzPiiH7w6kuHTATvLAcRvpF5WHDy86X0R4VDWoJqwCMX5v9cPS53PY_2JFI52cTH1skzyI61G7warvPCi7URC6N'
+login_url = 'https://booking.xidian.edu.cn/#/app/booking-types/e22f3c4e-0a9b-43b0-b42f-81000ab730c7'
 target_url = 'https://booking.xidian.edu.cn/#/app/booking-types/e22f3c4e-0a9b-43b0-b42f-81000ab730c7'
 month_day = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 
@@ -41,24 +41,24 @@ class Room:
             element = elements[2]
             element.click()
 
-        # 转换页面到抢房间页面
-        for handle in self.driver.window_handles:
-            time.sleep(0.1)
-            self.driver.switch_to.window(handle)
-            if "修身室9-108" in self.driver.title:
-                break
-
         # 开始循环抢房间
-        self.element = self.driver.find_element(By.CSS_SELECTOR, 'footer > button')
+        i = 0
         while self.driver.title.find('我的预定 — 资源预约平台') == -1:
+            # 转换页面到抢房间页面
+            for handle in self.driver.window_handles:
+                time.sleep(0.1)
+                self.driver.switch_to.window(handle)
+                if "修身室9-108" in self.driver.title:
+                    break
+
             self.element = self.driver.find_element(By.CSS_SELECTOR, 'footer > button')
-            print('正在选取')
             self.element.click()
-            time.sleep(0.05)
+            print(f'正在选取...第{i}次')
+            i = i + 1
             if self.driver.title == '修身室9-108':
                 self.driver.refresh()
+                time.sleep(0.05)
         print('选房间成功')
-
     # 选时间
 
     def choose_time(self):
@@ -68,19 +68,22 @@ class Room:
         if time_day > time_month_day:
             time_day %= time_month_day
         time_str = str(time_day)
-        day = self.driver.find_element(By.CLASS_NAME, 'k-days')
-        elements = day.find_elements(By.TAG_NAME, 'span')
-        for element in elements[2:]:
-            if element.text == time_str:
-                element.click()
-                break
-        time.sleep(0.5)
+        try:
+            day = self.driver.find_element(By.CLASS_NAME, 'k-days')
+            elements = day.find_elements(By.TAG_NAME, 'span')
+            for element in elements[2:]:
+                if element.text == time_str:
+                    element.click()
+                    break
+            time.sleep(0.5)
+        except Exception as e:
+            self.choose_time()
+
 
     def login(self):
         self.driver.get(target_url)
         while self.driver.title.find('统一身份认证平台') != -1:
-            time.sleep(3)
-        print('登录成功')
+            time.sleep(10)
         self.get_room()
 
 
